@@ -1,20 +1,11 @@
 #ifndef WAIT_H_
 #define WAIT_H_
-#include "msp430fg4618.h"
-#include "math.h"
+#include <msp430.h>
+#include <math.h>
 #include <stdio.h>
-#define WAIT_CCR TBCCR6
-#define WAIT_CCR_CTL TBCCTL6
-#define WAIT_CCR_IV TBIV_TBCCR6
+#include <wait.h>
 
-struct WaitCCRConfig
-{
-    unsigned frequency;
-    unsigned _clock_per_ms;
-    unsigned _ms_threshold;
-};
-
-struct WaitCCRConfig wait_ccr_config = { };
+struct WaitCCRConfig wait_ccr_config = { .frequency = 0, ._clock_per_ms = 0, ._ms_threshold = 0 };
 
 void SetWaitCCRFrequency(unsigned frequency_kHz)
 {
@@ -27,16 +18,16 @@ void SetWaitCCRFrequency(unsigned frequency_kHz)
 
 void Wait(unsigned ms)
 {
-    printf("have %u\n", TBR);
     WAIT_CCR_CTL &= ~CCIE;
+    unsigned current = TBR;
     if (wait_ccr_config._ms_threshold < ms)
     {
         ms = wait_ccr_config._ms_threshold;
     }
-    WAIT_CCR = TBR + ms * wait_ccr_config._clock_per_ms;
-    WAIT_CCR_CTL = CCIE;
+    WAIT_CCR = current + ms * wait_ccr_config._clock_per_ms;
+    WAIT_CCR_CTL |= CCIE;
     __bis_SR_register(LPM0_bits + GIE);
-    printf("become %u\n", TBR);
+    WAIT_CCR_CTL &= ~CCIE;
 }
 
 #endif /* WAIT_H_ */

@@ -1,10 +1,7 @@
-#ifndef AUDIO_OUTPUT_H_
-#define AUDIO_OUTPUT_H_
-
-
+#include <audio_output.h>
+#include <msp430.h>
 volatile const int sinwave[] = { 82 };
 volatile unsigned int sin_idx = 0;
-
 inline void AudioOutputCallback(void) {
     if (sin_idx >= sizeof(sinwave)) {
          {
@@ -19,7 +16,3 @@ inline void AudioOutputCallback(void) {
          ++sin_idx;
     }
 }
-
-
-
-#endif /* AUDIO_OUTPUT_H_ */
