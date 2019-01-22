@@ -1,8 +1,7 @@
 #ifndef MODE_SWITCH_H_
 #define MODE_SWITCH_H_
 
+void ConfigureSwitchModeButton();
 
-void ConfigureSwitchModeButton(void);
-
-__interrupt void OnButtonClickHandler(void);
+__interrupt void OnButtonClickHandler();
 #endif /* MODE_SWITCH_H_ */

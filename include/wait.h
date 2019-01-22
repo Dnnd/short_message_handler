@@ -6,8 +6,7 @@
 #define WAIT_CCR_CTL TBCCTL6
 #define WAIT_CCR_IV TBIV_TBCCR6
 
-struct WaitCCRConfig
-{
+struct WaitCCRConfig {
     unsigned frequency;
     unsigned _clock_per_ms;
     unsigned _ms_threshold;
