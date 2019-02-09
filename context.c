@@ -19,6 +19,14 @@ void SetRecordRowPosition(uint16_t position) {
     STATE_CONTEXT.record_row = position;
 }
 
+void IncRecordRowPosition() {
+    STATE_CONTEXT.record_row += 1;
+}
+
+void IncPlayRowPosition() {
+    STATE_CONTEXT.play_row += 1;
+}
+
 void SetPlayRowPosition(uint16_t position) {
     STATE_CONTEXT.play_row = position;
 }

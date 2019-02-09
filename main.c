@@ -1,53 +1,46 @@
 #include <audio_io.h>
 #include <msp430.h>
 #include <wait.h>
-#include <mode_switch.h>
 #include <context.h>
 #include <transfers.h>
 #include <debug.h>
 #include <isd4002.h>
+#include <port_1_isr.h>
+#include <port_2_isr.h>
+#include <spi.h>
+#include <stdio.h>
+#include <indicator.h>
 
 void initSPI() {
-
     P4DIR |= BIT1;
     P4OUT |= BIT1;
     P4SEL &= ~BIT1;
-
-    P3SEL |= BIT0 + BIT1 + BIT2 + BIT3;
-
-    IE2 &= ~UCB0RXIE;
-    IE2 &= ~UCB0TXIE;
+    P3SEL |= BIT1 + BIT2 + BIT3;
 
     UCB0CTL1 |= UCSWRST;
 
     UCB0CTL0 |=
     UCSYNC +
-    UCCKPL +
     UCMST;
 
     UCB0CTL1 |= UCSSEL_2;
 
-    UCB0BR0 = 0x02;
+    UCB0BR0 = 16;
     UCB0BR1 = 0;
     UCB0CTL1 &= ~UCSWRST;
+    SetupDMAReceiveSPIConfiguration();
+    SetupDMASendSPIConfiguration();
 }
 
 void ConfigureDAC() {
     ADC12CTL0 |= REF2_5V + REFON;
-    DAC12_0CTL = DAC12IR + DAC12AMP_5 + DAC12IE;
-}
-
-void ConfigureADC() {
-    ADC12CTL0 |= SHT0_4 | ADC12ON;
-    ADC12CTL1 = SHP | ADC12SSEL_3;
-    ADC12IE = 1;
-    P6SEL |= 1;
+    DAC12_0CTL = DAC12IR + DAC12AMP_5;
+    DAC12_0CTL &= ~DAC12IE;
 }
 
 void ConfigureTimerB() {
     TBCTL = TBSSEL_2 + MC_2 + TBCLR;
 }
-
 
 void main() {
     WDTCTL = WDTPW + WDTHOLD;
@@ -55,10 +48,19 @@ void main() {
     ConfigureAudioOutputDMA();
     ConfigureTimerB();
     SetWaitCCRFrequency(1048);
-//    ConfigureADC();
 
-    ConfigureSwitchModeButton();
+    ConfigurePort1ISR();
+    ConfigurePort2ISR();
+    ConfigureIndicators();
     initSPI();
+    SendCommand(STOPPWRDN);
+    Wait(25);
+    SendCommand(POWERUP);
+    Wait(25);
+    while(1){
+        SendCommand(RINT);
+        Wait(1);
+    }
     const Context *ctx = GetGlobalContext();
     while (1) {
         DEBUGF("sleeping!\n");
@@ -66,6 +68,14 @@ void main() {
         DEBUGF("awaken!\n");
         HandleStateTransfer(ctx);
         DEBUGF("accepted!\n");
+    }
+}
+
+#pragma vector=USCIAB0RX_VECTOR
+__interrupt void USCIB0_RX() {
+    if (IFG2 & UCB0RXIFG) {
+        uint8_t rx = UCB0RXBUF;
+        DEBUGF("SPI RX %d\n", rx);
     }
 }
 

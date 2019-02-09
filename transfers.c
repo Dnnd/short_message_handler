@@ -43,6 +43,7 @@ void HandleStateTransfer(const Context *ctx) {
     case EOF_TO_STOP:
         EOFToStopHandler(ctx);
         SetGlobalContextState(AUDIO_STOPPED);
+        break;
     case EMPTY_TRANSFER:
         break;
     default:
@@ -54,26 +55,25 @@ void HandleStateTransfer(const Context *ctx) {
 
 void RecordingToStopHanlder(const Context *ctx) {
     DEBUGF("recording -> stop\n");
-    DisableAudioOutput();
+    DisableAudioOutputDMA();
     Pause();
 }
 
 void StopToRecordingHandler(const Context *ctx) {
-    DEBUGF("stop -> recording\n");
-    EnableAudioOutput();
-    SwitchToRecordModeFromAddress(ctx->record_row);
+
+    DEBUGF("stop -> recording %d\n", ctx->record_row);
+    EnableAudioOutputDMA();
+    JumpToRecordingAddress(ctx->record_row);
 }
 
 void PlaybackToStopHandler(const Context *ctx) {
     DEBUGF("playback -> stop\n");
     Pause();
-//    DisableAudioInput();
 }
 
 void StopToPlaybackHandler(const Context *ctx) {
     DEBUGF("stop -> playback %d\n", ctx->play_row);
-    SwitchToPlaybackModeFromAddress(ctx->play_row);
-//    EnableAudioInput();
+    JumpToPlaybackAddress(ctx->play_row);
 }
 
 void RecordingToOVFHandler(const Context *ctx) {
@@ -101,7 +101,9 @@ void OVFToStopHandler(const Context *ctx) {
 }
 
 void StopToStopHandler(const Context *ctx) {
-    DEBUGF("stop -> stop\n");
+    SetRecordRowPosition(0);
+    SetPlayRowPosition(0);
+    Pause();
 }
 
 void RecordingToRecoringHandler(const Context *ctx) {

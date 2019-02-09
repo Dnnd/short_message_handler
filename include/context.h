@@ -38,5 +38,7 @@ void SetOperand(uint16_t operand);
 void SetGlobalContextState(State state);
 void SetPlayRowPosition(uint16_t play_row);
 void SetRecordRowPosition(uint16_t record_row);
+void IncRecordRowPosition();
+void IncPlayRowPosition();
 
 #endif /* STATES_H_ */
